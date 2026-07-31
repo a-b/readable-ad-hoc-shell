@@ -1,16 +1,27 @@
-# Readable ad-hoc commands — agent instructions
+---
+name: readable-ad-hoc-commands
+description: >
+  Format ad-hoc terminal commands so the user can read them and understand what
+  is happening before and while they run — shell scripts, but also inline
+  interpreter snippets (`python -c`, `node -e`), `jq` programs, and `psql`/`sql`
+  one-liners. Use whenever you are about to run a non-trivial command: a
+  multi-line script, a pipeline, a loop, a here-doc, chained `&&`/`;` commands,
+  a dense `-c`/`-e` snippet, or anything with quoting/escaping the user would
+  struggle to parse at a glance.
+---
 
-These are drop-in instructions for **any** coding agent. Put them in a system
-prompt, an `AGENTS.md`, a Cursor/Windsurf rules file, or load the bundled Claude
-Code skill (see [`readable-ad-hoc-commands/SKILL.md`](readable-ad-hoc-commands/SKILL.md)).
-The goal: when an agent runs a non-trivial command, format it so the human can
-grasp its **intent, steps, and blast radius before it executes** — instead of a
-dense one-liner they must reverse-engineer or approve blind.
+# Readable Ad-hoc Commands
 
-This applies to **any command language you fire at a terminal or REPL**, not just
-bash — `python -c`, `node -e`, `jq`, `psql -c`, `awk`. It is about throwaway
-*commands*, not maintained application code; writing clean application code is a
-different concern (that's code review's job).
+Ad-hoc commands an agent writes are usually optimized for the machine: one dense
+line, cryptic flags, no explanation. The user then has to reverse-engineer what
+it does — or worse, approve it without understanding. Make the commands you run
+**legible**: the user should grasp intent, steps, and blast radius before the
+command executes.
+
+This applies to **any command language you fire at a terminal or REPL**, not
+just bash — `python -c`, `node -e`, `jq`, `psql -c`, `awk`. It is about
+throwaway *commands*, not maintained programs; writing clean application code is
+a different concern (that's code review's job).
 
 ## When this applies
 
@@ -31,27 +42,36 @@ A bare `ls`, `git status`, or `SELECT 1` needs none of this — just run it.
 These are language-neutral. The *mechanics* (comment char, fail-fast idiom)
 differ per language — see the table below.
 
-1. **One step per line, top to bottom.** Break dense one-liners into a readable
-   sequence. The reader should be able to scan line-by-line and follow the logic.
-   Prefer newlines over `;`. For inline snippets, use a here-doc or a real
-   multi-line string instead of cramming everything onto one `-c` line.
-2. **Comment the *why*, not the obvious.** Add a short comment above each logical
-   block explaining its purpose and, if relevant, its effect. Skip comments that
-   just restate the command.
-3. **Name things.** Pull magic values, paths, and repeated strings into named
-   variables/bindings at the top. A named value is self-documenting.
-4. **Announce progress for long runs.** For multi-phase work, print a short
-   banner before each phase so the user can follow along in the output, not just
-   the source.
-5. **Fail loud and early.** Start real scripts with the language's fail-fast idiom
-   so a failed step stops the run instead of silently barreling on. Mention it
-   exists; don't over-explain.
-6. **Preview destructive actions.** Before anything that deletes/overwrites, print
-   exactly what will be affected, or do a dry run first (or wrap it in a
-   transaction you can roll back). Never bury a destructive step mid-pipeline.
-7. **Say what it does in prose, first.** Before running, give the user a one- to
-   three-line plain-English summary of what the command does and what changes to
-   expect. Then show the command.
+### 1. One step per line, top to bottom
+Break dense one-liners into a readable sequence. The reader should be able to
+scan line-by-line and follow the logic. Prefer newlines over `;`. For inline
+snippets, use a here-doc or a real multi-line string instead of cramming
+everything onto one `-c` line.
+
+### 2. Comment the *why*, not the obvious
+Add a short comment above each logical block explaining its purpose and, if
+relevant, its effect. Skip comments that just restate the command.
+
+### 3. Name things
+Pull magic values, paths, and repeated strings into named variables/bindings at
+the top. A named value is self-documenting.
+
+### 4. Announce progress for long runs
+For multi-phase work, print a short banner before each phase so the user can
+follow along in the output, not just the source.
+
+### 5. Fail loud and early
+Start real scripts with the language's fail-fast idiom so a failed step stops
+the run instead of silently barreling on. Mention it exists; don't over-explain.
+
+### 6. Preview destructive actions
+Before anything that deletes/overwrites, print exactly what will be affected, or
+do a dry run first (or wrap it in a transaction you can roll back). Never bury a
+destructive step mid-pipeline.
+
+### 7. Say what it does in prose, first
+Before running, give the user a one- to three-line plain-English summary of what
+the command does and what changes to expect. Then show the command.
 
 ## Per-language mechanics
 
