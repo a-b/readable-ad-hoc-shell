@@ -12,9 +12,9 @@ description: >
 
 Ad-hoc shell that an agent writes is usually optimized for the machine: one
 dense line, cryptic flags, no explanation. The user then has to reverse-engineer
-what it does — or worse, approve it without understanding. This skill makes the
-shell you run **legible**: the user should grasp intent, steps, and blast radius
-before the command executes.
+what it does — or worse, approve it without understanding. Make the shell you run
+**legible**: the user should grasp intent, steps, and blast radius before the
+command executes.
 
 ## When this applies
 

@@ -1,9 +1,15 @@
 # readable-ad-hoc-shell
 
-A [Claude Code](https://claude.com/claude-code) **skill** that makes the ad-hoc
-shell an agent runs *legible*. Instead of a dense one-liner you have to
-reverse-engineer — or approve blind — the agent formats multi-step commands so
-you can grasp their intent, steps, and blast radius **before** they execute.
+Instructions that make the ad-hoc shell an AI coding agent runs *legible*.
+Instead of a dense one-liner you have to reverse-engineer — or approve blind —
+the agent formats multi-step commands so you can grasp their intent, steps, and
+blast radius **before** they execute.
+
+**Harness-neutral.** The rules live in [`AGENTS.md`](AGENTS.md) and work with any
+agent that reads a project instructions file or system prompt. A ready-to-drop
+[Claude Code](https://claude.com/claude-code) skill is bundled in
+[`readable-ad-hoc-shell/SKILL.md`](readable-ad-hoc-shell/SKILL.md). See
+[Use with any agent](#use-with-any-agent).
 
 ## Why
 
@@ -21,21 +27,35 @@ flags, no explanation. This skill flips that priority toward the human reader:
 It also knows when *not* to bother: a bare `ls` or `git status` runs as-is —
 the full treatment is reserved for genuinely complex or destructive scripts.
 
-## Install
+## Use with any agent
 
-Skills live in `~/.claude/skills/` (user-level, applies to every project) or
-`.claude/skills/` inside a project.
+The rules are plain Markdown in [`AGENTS.md`](AGENTS.md). Point your agent at
+that file however it consumes instructions:
+
+| Agent / tool | Where the guidance goes |
+|---|---|
+| **Any agent following the [AGENTS.md](https://agents.md) convention** (Codex, Amp, Zed, Jules, …) | Copy `AGENTS.md` to your repo root, or `cat` its contents into your existing one. |
+| **Claude Code** | Use the bundled skill — see below. Or add the rules to `CLAUDE.md`. |
+| **Cursor** | Paste the rules into `.cursor/rules/readable-shell.mdc` (or legacy `.cursorrules`). |
+| **Windsurf** | Add to `.windsurf/rules/` or the global rules. |
+| **GitHub Copilot** | Add to `.github/copilot-instructions.md`. |
+| **Generic / API-driven agent** | Prepend `AGENTS.md`'s body to the system prompt. |
+
+The guidance is intentionally short and self-contained so it drops cleanly into
+any of these without editing.
+
+### Claude Code skill
 
 ```bash
-# User-level install
 git clone https://github.com/a-b/readable-ad-hoc-shell.git
-mkdir -p ~/.claude/skills
+mkdir -p ~/.claude/skills                                   # user-level: all projects
 cp -r readable-ad-hoc-shell/readable-ad-hoc-shell ~/.claude/skills/
 ```
 
-Claude Code auto-discovers the skill on startup — no config needed. The skill's
+Claude Code auto-discovers the skill on startup — no config needed. Its
 *description* is loaded every session; its body loads on demand when a task
-calls for non-trivial shell.
+calls for non-trivial shell. For a single project, copy into `.claude/skills/`
+instead.
 
 ## Examples
 
@@ -164,9 +184,13 @@ multi-step, quoting-heavy, or destructive scripts.
 ## Layout
 
 ```
+AGENTS.md                    # harness-neutral rules (the portable source of truth)
 readable-ad-hoc-shell/
-└── SKILL.md      # the skill (frontmatter + instructions)
+└── SKILL.md                 # Claude Code skill adapter (frontmatter + same rules)
 ```
+
+`AGENTS.md` and `SKILL.md` carry the same guidance; the skill just adds the
+frontmatter Claude Code needs to auto-discover and trigger it.
 
 ## License
 
