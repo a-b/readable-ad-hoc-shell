@@ -37,15 +37,20 @@ Claude Code auto-discovers the skill on startup — no config needed. The skill'
 *description* is loaded every session; its body loads on demand when a task
 calls for non-trivial shell.
 
-## Example: before → after
+## Examples
 
-**Before** — what an agent typically emits:
+Each example pairs the dense command an agent would normally emit with what the
+skill turns it into, and calls out the rules it applies.
+
+### 1. Log housekeeping — naming, banners, previewing deletion
+
+**Before:**
 
 ```bash
 find . -name "*.log" -mtime +7 -exec gzip {} \; && find . -name "*.gz" -mtime +30 -delete && du -sh .
 ```
 
-**After** — what the skill produces:
+**After:**
 
 ```bash
 #!/usr/bin/env bash
@@ -66,9 +71,95 @@ echo "==> Disk usage after cleanup"
 du -sh "$root"
 ```
 
-…preceded in chat by a one-line summary: *"This gzips logs older than 7 days,
-deletes archives older than 30 days, then prints total size. It modifies and
-removes files under the current directory."*
+> Prose first: *"This gzips logs older than 7 days, deletes archives older than
+> 30 days, then prints total size. It modifies and removes files under the
+> current directory."*
+
+Rules shown: named variables (#3), progress banners (#4), `set -euo pipefail`
+(#5), prose summary (#7).
+
+### 2. Bulk rename — preview before touching anything
+
+The riskiest kind of one-liner: it renames files in place with no way to see
+what it will do first.
+
+**Before:**
+
+```bash
+for f in *.jpeg; do mv "$f" "${f%.jpeg}.jpg"; done
+```
+
+**After:**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Normalize .jpeg extensions to .jpg in the current directory.
+
+# Dry run first — show every rename WITHOUT doing it.
+echo "==> Planned renames:"
+for f in *.jpeg; do
+  echo "    $f -> ${f%.jpeg}.jpg"
+done
+
+# Then perform them.
+echo "==> Renaming"
+for f in *.jpeg; do
+  mv -v -- "$f" "${f%.jpeg}.jpg"
+done
+```
+
+> Prose first: *"This renames every `.jpeg` in the current directory to `.jpg`.
+> It first prints the full list of planned renames so you can check them, then
+> performs them."*
+
+Rules shown: preview destructive actions (#6), one step per line (#1),
+comment the why (#2).
+
+### 3. Cluster snapshot — replace a clever pipeline with a readable loop
+
+A nested `awk`/`xargs` incantation reads better as a short, labelled loop.
+
+**Before:**
+
+```bash
+kubectl get pods -A --no-headers | awk '$4>5{print $1,$2,$4}' | xargs -n3 sh -c 'echo "ns=$0 pod=$1 restarts=$2"'
+```
+
+**After:**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+restart_threshold=5   # flag pods that have restarted more than this
+
+echo "==> Pods with more than ${restart_threshold} restarts"
+# Columns: NAMESPACE NAME READY STATUS RESTARTS ...
+kubectl get pods -A --no-headers | while read -r ns name _ _ restarts _; do
+  if (( restarts > restart_threshold )); then
+    echo "    ns=${ns} pod=${name} restarts=${restarts}"
+  fi
+done
+```
+
+> Prose first: *"Read-only: lists every pod across all namespaces that has
+> restarted more than 5 times. Changes nothing."*
+
+Rules shown: clarity over cleverness (#3 anti-pattern), named threshold (#3),
+comment the why (#2), read-only blast-radius note (#7).
+
+### 4. When *not* to format
+
+A single, obviously-safe command needs none of this — the skill runs it as-is:
+
+```bash
+git status
+```
+
+No header, no banners, no ceremony. The full treatment is reserved for
+multi-step, quoting-heavy, or destructive scripts.
 
 ## Layout
 
