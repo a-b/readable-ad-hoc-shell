@@ -1,5 +1,7 @@
 # readable-ad-hoc-commands
 
+[![skills.sh](https://img.shields.io/badge/skills.sh-readable--ad--hoc--commands-black)](https://skills.sh/a-b/readable-ad-hoc-commands)
+
 **Stop approving shell commands you can't read.** When an AI coding agent fires
 a dense one-liner at your terminal, you either reverse-engineer it or rubber-stamp
 it blind. This makes the agent format those commands so you can see their intent,
@@ -46,7 +48,14 @@ Full rules and per-language mechanics: [`AGENTS.md`](AGENTS.md). More transforms
 
 ## Install
 
-**Claude Code** (bundled skill, auto-discovered on startup):
+**[skills.sh](https://skills.sh)** (recommended — works for every supported agent):
+
+```bash
+npx skills add a-b/readable-ad-hoc-commands       # this project
+npx skills add a-b/readable-ad-hoc-commands -g    # global: all projects
+```
+
+**Claude Code, by hand** (bundled skill, auto-discovered on startup):
 
 ```bash
 git clone https://github.com/a-b/readable-ad-hoc-commands.git
